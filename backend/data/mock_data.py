@@ -19,18 +19,23 @@ import pandas as pd
 random.seed(42)
 np.random.seed(42)
 
-WARDS = [f"Ward-{i}" for i in range(1, 9)]
+WARDS = [
+    "Anand Vihar", "ITO", "Dwarka Sec-8", "Rohini", "Connaught Place",
+    "Nehru Nagar", "Okhla Phase-II", "Patel Nagar", "Shahdara", "Kidwai Nagar",
+]
 
 SOURCE_PROFILES = {
     # ward -> dominant ground-truth source (used only to generate realistic mock data)
-    "Ward-1": "traffic",
-    "Ward-2": "construction",
-    "Ward-3": "industrial",
-    "Ward-4": "traffic",
-    "Ward-5": "dust",
-    "Ward-6": "industrial",
-    "Ward-7": "construction",
-    "Ward-8": "stubble_burning",
+    "Anand Vihar": "traffic",
+    "ITO": "traffic",
+    "Dwarka Sec-8": "dust",
+    "Rohini": "construction",
+    "Connaught Place": "traffic",
+    "Nehru Nagar": "construction",
+    "Okhla Phase-II": "industrial",
+    "Patel Nagar": "construction",
+    "Shahdara": "industrial",
+    "Kidwai Nagar": "construction",
 }
 
 FESTIVALS_2025_26 = {
@@ -42,13 +47,19 @@ FESTIVALS_2025_26 = {
 CITIES = ["Lucknow", "Delhi", "Mumbai", "Kanpur"]
 
 WARD_CENTERS = {
-    # Rough lat/lon per ward, used only so heatmap interpolation has
-    # somewhere realistic to draw points -- swap for real station
+    # Rough lat/lon per ward (New Delhi), used only so heatmap interpolation
+    # has somewhere realistic to draw points -- swap for real station
     # lat/lon (Section 9's `stations` table) once ingestion is live.
-    "Ward-1": (26.8467, 80.9462), "Ward-2": (26.8550, 80.9330),
-    "Ward-3": (26.8390, 80.9600), "Ward-4": (26.8700, 80.9250),
-    "Ward-5": (26.8300, 80.9150), "Ward-6": (26.8600, 80.9700),
-    "Ward-7": (26.8200, 80.9450), "Ward-8": (26.8750, 80.9550),
+    "Anand Vihar": (28.6469, 77.3164),
+    "ITO": (28.6289, 77.2414),
+    "Dwarka Sec-8": (28.5733, 77.0651),
+    "Rohini": (28.7324, 77.1108),
+    "Connaught Place": (28.6315, 77.2167),
+    "Nehru Nagar": (28.6507, 77.2723),
+    "Okhla Phase-II": (28.5308, 77.2713),
+    "Patel Nagar": (28.6512, 77.1639),
+    "Shahdara": (28.6736, 77.2905),
+    "Kidwai Nagar": (28.5795, 77.2090),
 }
 
 
