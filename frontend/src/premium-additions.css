@@ -191,11 +191,20 @@
   box-shadow: 0 0 0 2px rgba(99,102,241,0.2);
 }
 
+.form-select option {
+  color: #1e293b;
+  background: #ffffff;
+}
+
 /* Chart Container */
 .chart-container {
   width: 100%;
   height: 280px;
   min-height: 280px;
+}
+
+.forecast-chart {
+  background: #ffffff;
 }
 
 .card-static, .glass-panel {

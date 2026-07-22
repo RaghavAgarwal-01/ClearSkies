@@ -142,7 +142,7 @@ export default function ForecastPage() {
       </div>
 
       {/* Recharts line chart */}
-      <div className="card-static" style={{ padding: '24px', marginBottom: '24px' }}>
+      <div className="card-static forecast-chart" style={{ padding: '24px', marginBottom: '24px' }}>
         <div className="chart-container">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>

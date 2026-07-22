@@ -24,7 +24,11 @@ export default function LiveMap({ hotspots = [] }) {
       {boundaries && <GeoJSON data={boundaries} style={() => ({ color: '#38BDF8', weight: 1, fillOpacity: 0.04 })} />}
       {heatmap.map((point, index) => (
         <CircleMarker key={`${point.lat}-${point.lon}-${index}`} center={[point.lat, point.lon]}
-          radius={10} pathOptions={{ stroke: false, fillColor: getAqiColor(point.value), fillOpacity: 0.08 }} />
+          radius={16} pathOptions={{
+            stroke: false,
+            fillColor: getAqiColor(point.value),
+            fillOpacity: Math.min(0.42, Math.max(0.18, (point.value / 500) * 0.42)),
+          }} />
       ))}
       {hotspots.map((hotspot) => (
         <CircleMarker key={hotspot.id} center={[hotspot.lat, hotspot.lng]} radius={hotspot.aqi > 300 ? 11 : 8}
