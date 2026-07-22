@@ -7,6 +7,7 @@ import ForecastPage from './pages/ForecastPage';
 import HotspotsPage from './pages/HotspotsPage';
 import AdminPage from './pages/AdminPage';
 import CitizenPage from './pages/CitizenPage';
+import AnalyticsPage from './pages/AnalyticsPage';
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
             <Route path="/hotspots" element={<HotspotsPage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/citizen" element={<CitizenPage />} />
+            <Route path="/analytics" element={<AnalyticsPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

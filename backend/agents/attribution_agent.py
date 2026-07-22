@@ -62,10 +62,20 @@ class PollutionAttributionAgent:
         self._is_trained = False
 
     def train(self, training_df: pd.DataFrame, label_col: str = "source_label") -> str:
+        missing = [col for col in [*FEATURE_COLUMNS, label_col] if col not in training_df.columns]
+        if missing:
+            raise ValueError(f"Attribution training data is missing columns: {', '.join(missing)}")
+        training_df = training_df.dropna(subset=[*FEATURE_COLUMNS, label_col])
+        class_counts = training_df[label_col].value_counts()
+        if len(class_counts) < 2 or class_counts.min() < 2:
+            raise ValueError("Attribution model requires at least two reviewed source labels with two samples each.")
         X = training_df[FEATURE_COLUMNS]
         y = training_df[label_col]
+        test_size = max(len(class_counts), round(len(training_df) * 0.2))
+        if test_size >= len(training_df):
+            test_size = len(class_counts)
         X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42, stratify=y
+            X, y, test_size=test_size, random_state=42, stratify=y
         )
         self.model.fit(X_train, y_train)
         self._is_trained = True

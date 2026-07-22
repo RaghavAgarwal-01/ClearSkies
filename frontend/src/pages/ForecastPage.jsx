@@ -3,9 +3,9 @@ import {
   ResponsiveContainer, AreaChart, Area, Line, XAxis, YAxis,
   CartesianGrid, Tooltip as RechartsTooltip,
 } from 'recharts';
-import { WARDS, FORECAST, HEALTH_IMPLICATIONS } from '../data/mockData';
+import { HEALTH_IMPLICATIONS } from '../data/mockData';
 import { getAqiColor, getAqiLabel, getBand } from '../utils/aqi';
-import { getWardTrends } from '../api/client';
+import { getForecast, getWardTrends, getWards } from '../api/client';
 import { useTheme } from '../hooks/useTheme';
 
 const TIME_OPTIONS = ['24h', '48h', '72h'];
@@ -13,17 +13,27 @@ const TIME_OPTIONS = ['24h', '48h', '72h'];
 export default function ForecastPage() {
   const { theme } = useTheme();
   const [timeRange, setTimeRange] = useState('24h');
-  const [selectedWard, setSelectedWard] = useState(WARDS[0].id);
-
-  const data = useMemo(
-    () => FORECAST[selectedWard]?.[timeRange] || [],
-    [selectedWard, timeRange]
-  );
-
-  const wardName = useMemo(() => WARDS.find(w => w.id === selectedWard)?.name || '', [selectedWard]);
+  const [wards, setWards] = useState([]);
+  const [selectedWard, setSelectedWard] = useState('');
+  const [forecastData, setForecastData] = useState([]);
+  const wardName = selectedWard;
+  const data = useMemo(() => forecastData.filter((point) => point.horizon_hr <= Number.parseInt(timeRange, 10)).map((point) => ({
+    ...point, time: `+${point.horizon_hr}h`, predicted: point.predicted_aqi,
+    lower: point.lower_bound, upper: point.upper_bound,
+  })), [forecastData, timeRange]);
   const [trendData, setTrendData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    getWards().then((items) => {
+      if (!mounted) return;
+      setWards(items);
+      setSelectedWard(items[0]?.name || '');
+    }).catch((err) => { if (mounted) setError(err.message); });
+    return () => { mounted = false; };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -31,9 +41,11 @@ export default function ForecastPage() {
     setError(null);
     async function fetchTrend() {
       try {
-        const res = await getWardTrends(wardName);
+        if (!wardName) return;
+        const [res, forecast] = await Promise.all([getWardTrends(wardName), getForecast(wardName)]);
         if (mounted) {
           setTrendData(res);
+          setForecastData(forecast);
           setIsLoading(false);
         }
       } catch (err) {
@@ -95,8 +107,8 @@ export default function ForecastPage() {
             value={selectedWard}
             onChange={(e) => setSelectedWard(e.target.value)}
           >
-            {WARDS.map((w) => (
-              <option key={w.id} value={w.id}>{w.name}</option>
+            {wards.map((w) => (
+              <option key={w.name} value={w.name}>{w.name}</option>
             ))}
           </select>
         </div>

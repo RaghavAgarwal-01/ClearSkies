@@ -92,6 +92,16 @@ ACTION_MATRIX = {
     },
 }
 
+# A missing attribution must still produce an actionable, explicitly
+# diagnostic response instead of silently rendering an empty actions panel.
+ACTION_MATRIX["unknown"] = {
+    "satisfactory": [("Validate station calibration and inspect nearby sources", "field_inspector", 72)],
+    "moderate": [("Validate station calibration and inspect nearby sources", "field_inspector", 48)],
+    "poor": [("Dispatch a field inspection to identify the emission source", "field_inspector", 24)],
+    "very_poor": [("Dispatch an urgent field inspection and verify the monitoring station", "field_inspector", 12)],
+    "severe": [("Trigger emergency source investigation and verify monitoring data", "field_inspector", 4)],
+}
+
 
 @dataclass
 class RecommendedAction:
@@ -171,4 +181,3 @@ if __name__ == "__main__":
     agent = RecommendationAgent()
     bundle = agent.recommend(ward="Ward-2", source="construction", forecast_aqi=340)
     print(bundle)
-

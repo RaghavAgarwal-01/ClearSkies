@@ -94,7 +94,7 @@ def fetch_osm_features(bbox, amenity_type="industrial", max_retries: int = 3, ti
             if len(coords) >= 2:
                 features.append({
                     "type": "Feature",
-                    "properties": element.get("tags", {}),
+                    "properties": {**element.get("tags", {}), "osm_id": str(element.get("id", ""))},
                     "geometry": {"type": "LineString", "coordinates": coords}
                 })
 

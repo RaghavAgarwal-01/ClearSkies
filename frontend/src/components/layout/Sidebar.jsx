@@ -8,6 +8,7 @@ const monitorItems = [
 
 const opsItems = [
   { to: '/admin', label: 'Admin Panel', icon: ClipboardIcon },
+  { to: '/analytics', label: 'Analytics & Alerts', icon: ChartIcon },
   { to: '/citizen', label: 'Citizen Portal', icon: UserIcon },
 ];
 
@@ -108,4 +109,8 @@ function UserIcon() {
       <circle cx="12" cy="7" r="4" />
     </svg>
   );
+}
+
+function ChartIcon() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18" /><path d="m7 15 4-4 3 2 5-6" /></svg>;
 }

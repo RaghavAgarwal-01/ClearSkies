@@ -1,16 +1,34 @@
 import { useState, useMemo, useEffect } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Tooltip } from 'react-leaflet';
 import { getAqiColor, getAqiBadgeClass, getAqiLabel, SOURCE_TYPES } from '../utils/aqi';
-import { postAttribution, getModelReport, getHotspots } from '../api/client';
+import { postAttribution, getHotspotFeatures, getHotspots } from '../api/client';
 import 'leaflet/dist/leaflet.css';
 
 const FILTER_OPTIONS = [
   { key: 'all',          label: 'All Sources' },
-  { key: 'vehicular',    label: '🚗 Vehicular' },
+  { key: 'traffic',      label: '🚗 Traffic' },
   { key: 'construction', label: '🏗 Construction' },
   { key: 'industrial',   label: '🏭 Industrial' },
-  { key: 'agricultural', label: '🌾 Agricultural' },
+  { key: 'stubble_burning', label: '🌾 Stubble burning' },
 ];
+
+const ATTRIBUTION_FEATURES = [
+  'traffic_density_idx',
+  'construction_permit_density',
+  'industrial_stack_count',
+  'thermal_anomaly_count',
+  'dust_landuse_pct',
+  'pm25',
+];
+
+function hasCompleteAttributionFeatures(features) {
+  return ATTRIBUTION_FEATURES.every((key) => (
+    features[key] !== null
+    && features[key] !== undefined
+    && features[key] !== ''
+    && Number.isFinite(Number(features[key]))
+  ));
+}
 
 export default function HotspotsPage() {
   const [filter, setFilter] = useState('all');
@@ -47,12 +65,6 @@ export default function HotspotsPage() {
   const [attribution, setAttribution] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [modelReport, setModelReport] = useState(null);
-
-  useEffect(() => {
-    getModelReport().then(res => setModelReport(res)).catch(console.error);
-  }, []);
-
   useEffect(() => {
     if (!selectedHotspot) {
       setAttribution(null);
@@ -63,47 +75,29 @@ export default function HotspotsPage() {
     setIsLoading(true);
     setError(null);
     
-    // Map to realistic mock features based on pre-assigned source type
-    const base = {
-      ward: selectedHotspot.zone,
-      pm25: selectedHotspot.aqi * 0.7,
-      traffic_density_idx: 0.2,
-      construction_permit_density: 0.1,
-      industrial_stack_count: 0,
-      thermal_anomaly_count: 0,
-      dust_landuse_pct: 0.1,
-    };
-    
-    if (selectedHotspot.source === 'vehicular') {
-      base.traffic_density_idx = 0.95;
-    } else if (selectedHotspot.source === 'construction') {
-      base.construction_permit_density = 0.85;
-      base.dust_landuse_pct = 0.7;
-    } else if (selectedHotspot.source === 'industrial') {
-      base.industrial_stack_count = 8;
-      base.thermal_anomaly_count = 3;
-    } else if (selectedHotspot.source === 'agricultural') {
-      base.thermal_anomaly_count = 12;
-      base.dust_landuse_pct = 0.5;
-    }
-
     async function fetchAttr() {
       try {
-        const res = await postAttribution(base);
+        const features = await getHotspotFeatures(selectedHotspot.id);
+        if (!hasCompleteAttributionFeatures(features)) {
+          throw new Error('This hotspot does not yet have the observed data needed for AI attribution.');
+        }
+        const res = await postAttribution({ ...features, hotspot_id: Number(selectedHotspot.id) });
         if (mounted) {
           setAttribution(res);
           setIsLoading(false);
         }
       } catch (err) {
         if (mounted) {
-          setError(err.message);
+          setError(err.message.startsWith('This hotspot')
+            ? err.message
+            : 'Attribution is temporarily unavailable. Please try again shortly.');
           setIsLoading(false);
         }
       }
     }
     
-    const t = setTimeout(fetchAttr, 500); // delay to show loading state
-    return () => { mounted = false; clearTimeout(t); };
+    fetchAttr();
+    return () => { mounted = false; };
   }, [selectedHotspot]);
 
   return (
@@ -225,7 +219,7 @@ export default function HotspotsPage() {
               {selectedId === hotspot.id && (
                 <div style={{ gridColumn: '1 / -1', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--color-border)' }}>
                   <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: '8px' }}>
-                    Live AI Attribution
+                    {error ? 'Attribution status' : 'Live AI Attribution'}
                   </div>
                   {isLoading ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-text-muted)' }}>
@@ -233,8 +227,8 @@ export default function HotspotsPage() {
                       <span style={{ fontSize: '0.8125rem' }}>Analyzing features...</span>
                     </div>
                   ) : error ? (
-                    <div style={{ color: 'var(--color-danger)', fontSize: '0.8125rem' }}>
-                      Failed to attribute source: {error}
+                    <div style={{ color: 'var(--color-text-muted)', fontSize: '0.8125rem' }}>
+                      {error}
                     </div>
                   ) : attribution ? (
                     <div>
@@ -247,7 +241,7 @@ export default function HotspotsPage() {
                         </span>
                       </div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', background: 'var(--color-bg-primary)', padding: '8px', borderRadius: '4px' }}>
-                        <strong>Evidence:</strong> {attribution.evidence.join(' ')}
+                        <strong>Evidence:</strong> {Object.entries(attribution.evidence || {}).map(([key, value]) => `${key.replaceAll('_', ' ')}: ${value}`).join(' · ') || 'No feature explanation available.'}
                       </div>
                     </div>
                   ) : null}

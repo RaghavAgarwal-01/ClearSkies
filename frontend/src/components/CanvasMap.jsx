@@ -4,7 +4,7 @@ import { useRef, useEffect } from 'react';
  * CanvasMap — dark canvas with pulsing AQI markers, grid lines, road beziers, city labels.
  * Pure canvas, no Leaflet.
  */
-export default function CanvasMap({ wards, conditionColor }) {
+export default function CanvasMap({ hotspots, conditionColor }) {
   const canvasRef = useRef(null);
   const animRef = useRef(null);
   const timeRef = useRef(0);
@@ -100,9 +100,9 @@ export default function CanvasMap({ wards, conditionColor }) {
       });
 
       // Pulsing AQI markers
-      wards.forEach((ward) => {
-        const [x, y] = project(ward.lat, ward.lng, w, h);
-        const color = getMarkerColor(ward.aqi);
+      hotspots.forEach((hotspot) => {
+        const [x, y] = project(hotspot.lat, hotspot.lng, w, h);
+        const color = getMarkerColor(hotspot.aqi);
         const pulsePhase = (t * 0.025) % (Math.PI * 2);
         const pulseScale = 1 + Math.sin(pulsePhase) * 0.35;
 
@@ -139,12 +139,12 @@ export default function CanvasMap({ wards, conditionColor }) {
         ctx.fillStyle = '#ffffff';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(ward.aqi.toString(), x, y + 0.5);
+        ctx.fillText(hotspot.aqi.toString(), x, y + 0.5);
 
         // Ward name below
         ctx.font = '8px "Inter", sans-serif';
         ctx.fillStyle = 'rgba(255,255,255,0.5)';
-        ctx.fillText(ward.name, x, y + 18);
+        ctx.fillText(hotspot.zone, x, y + 18);
       });
 
       ctx.restore();
@@ -157,7 +157,7 @@ export default function CanvasMap({ wards, conditionColor }) {
       window.removeEventListener('resize', resize);
       if (animRef.current) cancelAnimationFrame(animRef.current);
     };
-  }, [wards, conditionColor]);
+  }, [hotspots, conditionColor]);
 
   return (
     <canvas

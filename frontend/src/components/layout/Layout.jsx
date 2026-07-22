@@ -4,7 +4,7 @@ import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import SkyCanvas from '../SkyCanvas';
 import { CONDITIONS, CONDITION_PALETTES } from '../../data/conditionData';
-import { getAllTrends } from '../../api/client';
+import { getAllTrends, getHotspots } from '../../api/client';
 
 const ConditionContext = createContext();
 
@@ -17,8 +17,11 @@ export default function Layout() {
   const [time, setTime] = useState(new Date());
 
   // Backend state
-  const [wardTrends, setWardTrends] = useState(null);
-  const [cityAqi, setCityAqi] = useState(null);
+const [dashboardData, setDashboardData] = useState({
+    wardTrends: {},
+    hotspots: [],
+    cityAqi: null,
+});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -33,20 +36,27 @@ export default function Layout() {
     let mounted = true;
     async function fetchData() {
       try {
-        const data = await getAllTrends();
-        if (mounted) {
-          setWardTrends(data);
-          
-          // Calculate city average AQI
-          const values = Object.values(data);
-          if (values.length > 0) {
-            const sum = values.reduce((acc, curr) => acc + curr.avg_aqi, 0);
-            setCityAqi(Math.round(sum / values.length));
-          } else {
-            setCityAqi(null);
-          }
-          setIsLoading(false);
-        }
+         const [trends, hotspots] = await Promise.all([
+    getAllTrends(),
+    getHotspots()
+]);
+
+const values = Object.values(trends);
+if (mounted) {
+    setDashboardData({
+        wardTrends: trends,
+        hotspots,
+        cityAqi:
+            values.length > 0
+                ? Math.round(
+                    values.reduce((s, v) => s + v.avg_aqi, 0) /
+                    values.length
+                )
+                : null,
+    });
+
+    setIsLoading(false);
+}
       } catch (err) {
         if (mounted) {
           console.error("Failed to fetch trends", err);
@@ -81,9 +91,12 @@ export default function Layout() {
 
       <div className="app-layout">
         <Sidebar />
-        <Topbar time={time} cityAqi={cityAqi} />
+        <Topbar
+        time={time}
+        cityAqi={dashboardData.cityAqi}
+          />
         <main className="main-content">
-          <Outlet context={{ wardTrends, isLoading, error }} />
+          <Outlet context={{ dashboardData, isLoading, error }} />
         </main>
       </div>
     </ConditionContext.Provider>

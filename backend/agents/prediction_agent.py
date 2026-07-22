@@ -83,6 +83,12 @@ class AQIPredictionAgent:
         self._residual_std = None
 
     def train(self, training_df: pd.DataFrame, target_col: str = "aqi") -> dict:
+        missing = [col for col in [*FEATURE_COLUMNS, target_col] if col not in training_df.columns]
+        if missing:
+            raise ValueError(f"Forecast training data is missing columns: {', '.join(missing)}")
+        training_df = training_df.dropna(subset=[*FEATURE_COLUMNS, target_col])
+        if len(training_df) < 10:
+            raise ValueError("Forecast model requires at least 10 complete observed daily feature rows.")
         X = training_df[FEATURE_COLUMNS]
         y = training_df[target_col]
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)

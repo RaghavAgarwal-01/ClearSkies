@@ -33,8 +33,11 @@ export function getAqiLabel(aqi) {
 
 /** Source attribution */
 export const SOURCE_TYPES = {
+  traffic:      { icon: '🚗', label: 'Traffic',      color: '#F5A623' },
   vehicular:    { icon: '🚗', label: 'Vehicular',    color: '#F5A623' },
   construction: { icon: '🏗', label: 'Construction',  color: '#FF7E00' },
   industrial:   { icon: '🏭', label: 'Industrial',    color: '#99004C' },
   agricultural: { icon: '🌾', label: 'Agricultural',  color: '#92D14F' },
+  stubble_burning: { icon: '🌾', label: 'Stubble Burning', color: '#92D14F' },
+  unknown:      { icon: '❔', label: 'Under review', color: '#94A3B8' },
 };

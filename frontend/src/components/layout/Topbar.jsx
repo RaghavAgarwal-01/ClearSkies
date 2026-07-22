@@ -37,6 +37,8 @@ export default function Topbar({ time, cityAqi }) {
             key={c.key}
             className={`condition-tab${conditionKey === c.key ? ' active' : ''}`}
             onClick={() => setCondition(c.key)}
+            aria-pressed={conditionKey === c.key}
+            title={`Show live wards in the ${c.label} AQI band`}
           >
             {c.label}
           </button>

@@ -769,13 +769,14 @@ a { color: var(--text); text-decoration: none; }
 /* Chat UI Improvements */
 .chat-panel {
   position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%) translateY(100%);
-  width: 100%;
-  max-width: 500px;
-  height: 80vh;
-  max-height: 600px;
+  right: 24px;
+  bottom: 84px;
+  left: auto;
+  transform: translateY(16px) scale(0.98);
+  transform-origin: bottom right;
+  width: min(420px, calc(100vw - 48px));
+  height: min(560px, calc(100vh - 120px));
+  max-height: none;
   background: rgba(20, 25, 35, 0.85);
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
@@ -789,9 +790,49 @@ a { color: var(--text); text-decoration: none; }
   box-shadow: 0 -10px 40px rgba(0,0,0,0.3);
 }
 
+@media (max-width: 700px) {
+  .chat-panel {
+    right: 12px;
+    bottom: 76px;
+    width: calc(100vw - 24px);
+    height: min(560px, calc(100vh - 100px));
+  }
+}
+
 .chat-panel.open {
-  transform: translateX(-50%) translateY(0);
+  transform: translateY(0) scale(1);
   opacity: 1;
+}
+
+.citizen-chat-trigger {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 151;
+  padding: 13px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35);
+  color: #fff;
+  cursor: pointer;
+  font: 600 0.875rem var(--font-body);
+}
+
+.citizen-chat-trigger:hover {
+  transform: translateY(-2px);
+}
+
+.citizen-chat-trigger.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 700px) {
+  .citizen-chat-trigger {
+    right: 12px;
+    bottom: 16px;
+  }
 }
 
 .chat-panel-header {

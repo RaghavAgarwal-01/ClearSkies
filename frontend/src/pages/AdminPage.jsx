@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { ENFORCEMENT_QUEUE } from '../data/mockData';
 import { SOURCE_TYPES } from '../utils/aqi';
-import { getEnforcementQueue, postEnforcementOutcome } from '../api/client';
+import { getEnforcementQueue, patchEnforcementStatus, postEnforcementOutcome } from '../api/client';
 
 export default function AdminPage() {
   const [queue, setQueue] = useState([]);
@@ -25,8 +24,7 @@ export default function AdminPage() {
         if (mounted) {
           console.error("Failed to fetch queue", err);
           setError(err.message);
-          // Fall back to mock data if backend isn't available
-          setQueue(ENFORCEMENT_QUEUE);
+          setQueue([]);
           setIsLoading(false);
         }
       }
@@ -36,7 +34,13 @@ export default function AdminPage() {
     return () => { mounted = false; clearTimeout(t); };
   }, []);
 
-  const handleStatusChange = (id, newStatus) => {
+  const handleStatusChange = async (id, newStatus) => {
+    try {
+      await patchEnforcementStatus(id, newStatus);
+    } catch (err) {
+      setError(err.message);
+      return;
+    }
     setQueue((prev) =>
       prev.map((item) =>
         item.id === id ? { ...item, status: newStatus } : item

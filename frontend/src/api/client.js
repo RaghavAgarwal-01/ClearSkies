@@ -64,22 +64,62 @@ export async function getHotspots() {
   return request('/api/hotspots');
 }
 
+export async function getWards() {
+  return request('/api/wards');
+}
+
+export async function getForecast(ward) {
+  return request(`/api/forecast/${encodeURIComponent(ward)}/multi-horizon`);
+}
+
+export async function getHotspotFeatures(id) {
+  return request(`/api/hotspots/${encodeURIComponent(id)}/features`);
+}
+
+export async function getRecommendations(ward) {
+  return request(`/api/recommendations/${encodeURIComponent(ward)}`);
+}
+
+export async function getHeatmap() {
+  return request('/api/heatmap');
+}
+
+export async function getWardBoundaries() {
+  return request('/api/wards/geojson');
+}
+
+export async function getAlerts() {
+  return request('/api/alerts');
+}
+
+export async function getAnalytics() {
+  return request('/api/analytics');
+}
+
+export async function getMultiCityComparison() {
+  return request('/api/multi-city-comparison');
+}
+
 // ---- Feature: Admin Enforcement Queue ----
 export async function getEnforcementQueue() {
   return request('/api/enforcement-queue');
 }
 
 export const postEnforcementOutcome = (data) =>
-  fetch(`${API_BASE}/api/enforcement-outcome`, {
+  request('/api/enforcement-outcome', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
-  }).then(r => r.json());
+  });
+
+export const patchEnforcementStatus = (id, status) => request(`/api/enforcement/${encodeURIComponent(id)}`, {
+  method: 'PATCH',
+  body: JSON.stringify({ status }),
+});
 
 export const postChatQuery = (data) =>
-  fetch(`${API_BASE}/api/chat`, {
+  request('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
-  }).then(r => r.json());
-
+  });

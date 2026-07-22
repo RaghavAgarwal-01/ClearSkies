@@ -14,6 +14,7 @@ ALTER TABLE hotspots ADD COLUMN IF NOT EXISTS industrial_stack_count INTEGER;
 ALTER TABLE hotspots ADD COLUMN IF NOT EXISTS thermal_anomaly_count INTEGER;
 ALTER TABLE hotspots ADD COLUMN IF NOT EXISTS dust_landuse_pct DOUBLE PRECISION;
 ALTER TABLE hotspots ADD COLUMN IF NOT EXISTS pm25 DOUBLE PRECISION;
+ALTER TABLE hotspots ADD COLUMN IF NOT EXISTS source_label TEXT;
 
 -- ---------- citizens: needed by the Citizen Advisory Agent ----------
 -- citizen_advisories logs *sent* advisories, but there's no subscriber/

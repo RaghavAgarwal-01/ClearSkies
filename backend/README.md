@@ -82,28 +82,21 @@ Your live Neon schema already exists (`db/migrations/001_init_schema.sql` mirror
    ```bash
    export $(cat .env | xargs)
    ```
-3. Run the additive migration (psql, or the Python fallback if psql isn't installed):
+3. Run the additive migrations (psql, or the Python fallback if psql isn't installed):
    ```bash
    psql "$DATABASE_URL" -f db/migrations/002_add_attribution_and_citizens.sql
    # or, if psql isn't available (e.g. plain Git Bash on Windows):
    python db/run_migration.py db/migrations/002_add_attribution_and_citizens.sql
+   python db/run_migration.py db/migrations/003_add_constraints_and_weather.sql
+   python db/run_migration.py db/migrations/005_operational_data.sql
    ```
 4. Seed at least one row in `citizens` so `/api/advisory` has someone real to look up (or keep passing profile fields directly in the request, which works without the table too).
-5. Start the API — it auto-detects `DATABASE_URL` and switches from mock to real data for trends/advisories, and writes attribution + advisory results back to Neon.
+5. Set `GROQ_API_KEY` in `backend/.env` to enable the RAG chat endpoint, then start the API. It uses live database data only and writes attribution, advisories, alerts, and outcomes back to Neon.
 
-**Important caveat on Feature 2 (attribution):** the RandomForest classifier needs *labeled* training data (a `source_label` per hotspot) to learn from. Your `hotspots` table doesn't have that until your team manually labels some historical hotspots or an inspector confirms a few. Until then, `api/main.py` keeps training on mock labeled data even in real-DB mode — inference still happens on your real hotspot features, only the training set is synthetic. Swap `_training_df` in `api/main.py` to a real labeled query once you have ~50+ labeled examples.
+**Attribution model requirement:** the RandomForest classifier trains only on manually reviewed `source_label` rows. It reports unavailable instead of training on fabricated labels until there are enough reviewed examples.
 
-**Same caveat applies to Feature 1 (prediction):** it needs enough real historical days (ideally 60+) with weather/traffic features attached before switching `_prediction_training_df` from `generate_prediction_training_data()` to a real query — a LightGBM model trained on a handful of real days will overfit badly.
+**Forecast model requirement:** the model trains from observed readings and stored weather columns. It reports unavailable until enough complete daily rows have been ingested.
 
-## Swapping mock data for real feeds
+## Live data flow
 
-`data/mock_data.py` generates synthetic hotspot features, citizen profiles, weather/traffic conditions, emission sources, sub-hourly readings, and 400 days of historical AQI so all seven agents can be built/demoed before the ingestion pipeline (CAAQMS, Overpass land-use, NASA FIRMS, weather APIs) is live. Each generator's output schema matches what the real PostGIS tables will produce — swap the call sites in `api/main.py` for real DB queries without touching agent logic.
-
-## What to plug in next
-- Replace `generate_hotspot_features()` with a real query joining `readings` + `emission_sources` + Overpass land-use.
-- Replace `generate_citizen_profile()` / hardcoded profiles with the `citizens` table (added by migration 002).
-- Replace `generate_historical_aqi()` with a `SELECT ward, date, avg(aqi) FROM readings GROUP BY ...` query against PostGIS.
-- Replace `generate_current_conditions()` and `generate_prediction_training_data()` with real weather (Open-Meteo) + traffic feeds once ingestion is live.
-- Replace `generate_emission_sources()` with a real query against the `emission_sources` table.
-- Replace `generate_realtime_readings()` with a live sub-hourly `readings` query (last N minutes) for the Emergency Detection Agent.
-- Add more languages to `TEMPLATES` / `VULNERABILITY_ADDENDA` in `advisory_agent.py` (Kannada, Tamil) — it's a pure data addition, no code change needed.
+The scheduled pipeline ingests CPCB readings (OpenAQ v3 is a keyed fallback), Open-Meteo weather, NASA FIRMS anomalies, and periodic OSM/Overpass land-use and road features. It rejects invalid records and never inserts random fallback readings. The frontend calls the live API routes; `data/mock_data.py` remains isolated to development examples only.

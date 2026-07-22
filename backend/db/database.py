@@ -49,7 +49,13 @@ def get_engine():
             )
         # Neon requires SSL; pool_pre_ping avoids stale-connection errors on
         # serverless Postgres, which can suspend idle connections.
-        _engine = create_engine(DATABASE_URL, pool_pre_ping=True, pool_size=5, max_overflow=5)
+        _engine = create_engine(
+            DATABASE_URL,
+            pool_pre_ping=True,
+            pool_size=5,
+            max_overflow=5,
+            connect_args={"connect_timeout": 10},
+        )
     return _engine
 
 
